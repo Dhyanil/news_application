@@ -56,28 +56,26 @@ class _MainScreenState extends State<MainScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
             child: Image.asset('lib/assets/Hamburger.png', width: 24, height: 24),
           ),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
-                },
-                child: Image.asset('lib/assets/Search.png', width: 24, height: 24),
-              ),
-              const SizedBox(width: 16),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfile()));
-                },
-                child: const CircleAvatar(radius: 15, backgroundColor: Colors.grey),
-              ),
-            ],
+          const SizedBox(width: 12), // Add spacing
+          Text('Mantavya', style: GoogleFonts.hindVadodara(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)), // Styled text
+          const Spacer(), // Pushes remaining items to the right
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
+            },
+            child: Image.asset('lib/assets/Search.png', width: 24, height: 24),
+          ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfile()));
+            },
+            child: const CircleAvatar(radius: 15, backgroundColor: Colors.grey),
           ),
         ],
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:newsapp/models/post.dart';
-import 'package:newsapp/presentations/crimescreen..dart';
 import 'package:newsapp/services/api_services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,8 +9,10 @@ import 'package:newsapp/presentations/searchscreen.dart';
 import 'package:newsapp/presentations/profile.dart';
 import 'package:newsapp/presentations/automationnewsscreen.dart';
 import 'package:newsapp/presentations/travelnewsscreen.dart';
-import 'package:newsapp/presentations/home_screen.dart'; // ✅ Import HomeScreen
+import 'package:newsapp/presentations/home_screen.dart';
 import 'package:newsapp/presentations/shorts_screen.dart';
+
+import 'crimescreen..dart';
 
 class SportsNewsScreen extends StatefulWidget {
   const SportsNewsScreen({super.key});
@@ -23,7 +24,14 @@ class SportsNewsScreen extends StatefulWidget {
 class _SportsNewsScreenState extends State<SportsNewsScreen> {
   Future<List<Post>>? sportsPosts;
   final HtmlUnescape unescape = HtmlUnescape();
-  String selectedCategory = "Sports"; // ✅ Sports icon selected initially
+  String selectedCategory = "Sports"; // Default category
+
+  final List<Map<String, dynamic>> categories = [
+    {"title": "Sports", "icon": Icons.sports_soccer, "color": Colors.green, "screen": SportsNewsScreen()},
+    {"title": "Crime", "icon": Icons.gavel, "color": Colors.red, "screen": CrimeNewsScreen()},
+    {"title": "Tech", "icon": Icons.memory, "color": Colors.blue, "screen": AutomationNewsScreen()},
+    {"title": "Travel", "icon": Icons.flight, "color": Colors.orange, "screen": TravelNewsScreen()},
+  ];
 
   @override
   void initState() {
@@ -33,27 +41,17 @@ class _SportsNewsScreenState extends State<SportsNewsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // ✅ Navigates to HomeScreen when back button is pressed
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildAppBar(),
-              _buildCategoriesList(), // ✅ Icons under AppBar
-              _buildSectionTitle("Latest Sports News"),
-              Expanded(child: _buildVerticalNewsList()),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildAppBar(),
+            _buildCategoriesList(), // Enhanced UI
+            _buildSectionTitle("Latest Sports News"),
+            Expanded(child: _buildVerticalNewsList()),
+          ],
         ),
       ),
     );
@@ -66,28 +64,28 @@ class _SportsNewsScreenState extends State<SportsNewsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
-            onTap: () {
-              // ✅ Navigates back to HomeScreen instead of just popping
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const MainScreen()),
-              );
-            },
+            onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainScreen())),
             child: const Icon(Icons.arrow_back, size: 24, color: Colors.black),
+          ),
+          const SizedBox(width: 12), // Space between the back button and the title
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft, // Aligns text to the left
+              child: Text(
+                'Sports News',
+                style: GoogleFonts.hindVadodara(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+            ),
           ),
           Row(
             children: [
               GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
-                },
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen())),
                 child: const Icon(Icons.search, size: 24, color: Colors.black),
               ),
               const SizedBox(width: 16),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfile()));
-                },
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfile())),
                 child: const CircleAvatar(radius: 15, backgroundColor: Colors.grey),
               ),
             ],
@@ -99,77 +97,122 @@ class _SportsNewsScreenState extends State<SportsNewsScreen> {
 
   Widget _buildCategoriesList() {
     return Container(
-      height: 50,
+      height: 55,
       margin: const EdgeInsets.only(top: 8),
-      child: ListView(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _buildCategoryItem("Sports", Icons.sports_soccer),
-          _buildCategoryItem("Crime", Icons.gavel),
-          _buildCategoryItem("Travel", Icons.flight),
-          _buildCategoryItem("Tech & Auto", Icons.directions_car),
-          _buildCategoryItem("Shorts", Icons.play_arrow),
-        ],
+        itemCount: categories.length + 1, // Adding 1 for Shorts
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemBuilder: (context, index) {
+          if (index == categories.length) {
+            // Handle Shorts separately
+            return GestureDetector(
+              onTap: () async {
+                final shortsVideos = await ApiService().fetchYouTubeShorts(); // Fetch Shorts videos
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VideoFeedScreen(videoPosts: shortsVideos),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.purple),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.play_circle_fill, size: 18, color: Colors.purple),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Shorts",
+                      style: GoogleFonts.hindVadodara(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.purple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final category = categories[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => category["screen"]),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: category["color"].withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: category["color"]),
+              ),
+              child: Row(
+                children: [
+                  Icon(category["icon"], size: 18, color: category["color"]),
+                  const SizedBox(width: 6),
+                  Text(
+                    category["title"],
+                    style: GoogleFonts.hindVadodara(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: category["color"],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
-Widget _buildCategoryItem(String title, IconData icon) {
-  bool isSelected = selectedCategory == title;
-  return GestureDetector(
-    onTap: () {
-      if (title == "Sports") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const SportsNewsScreen()));
-      } else if (title == "Crime") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const CrimeNewsScreen()));
-      } else if (title == "Tech & Auto") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const AutomationNewsScreen()));
-      } else if (title == "Travel") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const TravelNewsScreen()));
-      } else if (title == "Shorts") {
-        ApiService apiService = ApiService();
-        apiService.fetchYouTubeShorts().then((videos) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VideoFeedScreen(videoPosts: videos),
-            ),
-          );
-        }).catchError((error) {
-          print("❌ Error fetching videos: $error");
-        });
-      } else {
-        setState(() {
-          selectedCategory = isSelected ? '' : title;
-          sportsPosts = ApiService().fetchPosts(category: title); // ✅ Fixed Error
-        });
-      }
-    },
-    child: Container(
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.withOpacity(0.2) : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: isSelected ? Colors.blue : Colors.grey),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: GoogleFonts.hindVadodara(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? Colors.blue : Colors.black,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
+  Widget _buildCategoryItem(String title, IconData icon, Color color, Widget screen) {
+    bool isSelected = selectedCategory == title;
+    return GestureDetector(
+      onTap: () {
+        if (title == selectedCategory) return;
+        Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.8) : color.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: isSelected
+              ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8, spreadRadius: 2)]
+              : [],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: isSelected ? Colors.white : Colors.black),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: GoogleFonts.hindVadodara(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
@@ -211,11 +254,7 @@ Widget _buildCategoryItem(String title, IconData icon) {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 5,
-                        spreadRadius: 2,
-                      ),
+                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5, spreadRadius: 2),
                     ],
                   ),
                   child: Row(
@@ -243,10 +282,7 @@ Widget _buildCategoryItem(String title, IconData icon) {
                               style: GoogleFonts.hindVadodara(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 5),
-                            Text(
-                              post.date,
-                              style: GoogleFonts.hindVadodara(fontSize: 12, color: Colors.grey),
-                            ),
+                            Text(post.date, style: GoogleFonts.hindVadodara(fontSize: 12, color: Colors.grey)),
                           ],
                         ),
                       ),

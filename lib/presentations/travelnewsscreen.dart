@@ -24,7 +24,12 @@ class _TravelNewsScreenState extends State<TravelNewsScreen> {
   Future<List<Post>>? travelPosts;
   final HtmlUnescape unescape = HtmlUnescape();
   String selectedCategory = "Travel"; // ✅ Default selected
-
+  final List<Map<String, dynamic>> categories = [
+    {"title": "Sports", "icon": Icons.sports_soccer, "color": Colors.green, "screen": SportsNewsScreen()},
+    {"title": "Crime", "icon": Icons.gavel, "color": Colors.red, "screen": CrimeNewsScreen()},
+    {"title": "Tech", "icon": Icons.memory, "color": Colors.blue, "screen": AutomationNewsScreen()},
+    {"title": "Travel", "icon": Icons.flight, "color": Colors.orange, "screen": TravelNewsScreen()},
+  ];
   @override
   void initState() {
     super.initState();
@@ -53,7 +58,6 @@ class _TravelNewsScreenState extends State<TravelNewsScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           GestureDetector(
             onTap: () {
@@ -64,46 +68,111 @@ class _TravelNewsScreenState extends State<TravelNewsScreen> {
             },
             child: const Icon(Icons.arrow_back, size: 24, color: Colors.black),
           ),
+          const SizedBox(width: 12), // Spacing between back icon and title
           Text(
             "Travel News",
             style: GoogleFonts.hindVadodara(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
           ),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
-                },
-                child: const Icon(Icons.search, size: 24, color: Colors.black),
-              ),
-              const SizedBox(width: 16),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfile()));
-                },
-                child: const CircleAvatar(radius: 15, backgroundColor: Colors.grey),
-              ),
-            ],
+          const Spacer(), // Pushes everything else to the right
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
+            },
+            child: const Icon(Icons.search, size: 24, color: Colors.black),
+          ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfile()));
+            },
+            child: const CircleAvatar(radius: 15, backgroundColor: Colors.grey),
           ),
         ],
       ),
     );
   }
 
+
   Widget _buildCategoriesList() {
     return Container(
-      height: 50,
+      height: 55,
       margin: const EdgeInsets.only(top: 8),
-      child: ListView(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _buildCategoryItem("Sports", Icons.sports_soccer),
-          _buildCategoryItem("Crime", Icons.gavel),
-          _buildCategoryItem("Travel", Icons.flight),
-          _buildCategoryItem("Tech & Auto", Icons.directions_car),
-          _buildCategoryItem("Shorts", Icons.play_arrow),
-        ],
+        itemCount: categories.length + 1, // Adding 1 for Shorts
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemBuilder: (context, index) {
+          if (index == categories.length) {
+            // Handle Shorts separately
+            return GestureDetector(
+              onTap: () async {
+                final shortsVideos = await ApiService().fetchYouTubeShorts(); // Fetch Shorts videos
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VideoFeedScreen(videoPosts: shortsVideos),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.purple),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.play_circle_fill, size: 18, color: Colors.purple),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Shorts",
+                      style: GoogleFonts.hindVadodara(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.purple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final category = categories[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => category["screen"]),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: category["color"].withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: category["color"]),
+              ),
+              child: Row(
+                children: [
+                  Icon(category["icon"], size: 18, color: category["color"]),
+                  const SizedBox(width: 6),
+                  Text(
+                    category["title"],
+                    style: GoogleFonts.hindVadodara(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: category["color"],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
