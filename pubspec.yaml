@@ -47,6 +47,8 @@ dependencies:
   html_unescape: ^2.0.0
   chewie: ^1.7.4
   webview_flutter: ^4.7.0
+  animated_text_kit:
+  flutter_animated_icons:
 
 
 
